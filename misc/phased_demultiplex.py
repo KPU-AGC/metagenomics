@@ -14,7 +14,6 @@ from argparse import (
     ArgumentDefaultsHelpFormatter)
 from pathlib import Path
 # --------------------------------------------------
-from Bio.Seq import Seq
 import subprocess
 import os
 import time
