@@ -3,7 +3,7 @@
 Purpose: Helper script to demultiplex phased primers using a subprocess wrapper.
 """
 __author__ = "Erick Samera"
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
 # TODO: implement support for custom primers
 
@@ -37,6 +37,13 @@ def get_args() -> Namespace:
         metavar='PATH',
         type=Path,
         help="path of directory to output demultiplexed fastq/fastq.gz")
+    parser.add_argument(
+        '-c',
+        '--cat',
+        dest='concatenate_path',
+        metavar='PATH',
+        type=Path,
+        help="path of directory to output concatenated fastq/fastq.gz")
     # --------------------------------------------------
     group_custom_regions = parser.add_argument_group(
         title='custom region options')
@@ -138,6 +145,18 @@ def perform_trim(file_arg: Path, output_path_arg:Path, demux_primers_dict_arg: d
                 os.rename(r2_intermediate_file, r1_intermediate_file.parent.joinpath(r2_new_name))
     end = time.time()
     print_runtime(f'Demultiplexed {file_arg.name} with {[primer for primer in demux_primers_dict_arg]} in {round(end - start, 3)} s.')
+
+def condense_files(file_arg: Path, intermediate_output_path_parg: Path, output_path_arg: Path):
+    file_prefix = file_arg.stem.split('_')[0]
+
+    for read in ('R1', 'R2'):
+        files_to_combine = [str(file) for file in intermediate_output_path_parg.glob(f'{file_prefix}*{read}*') if 'ungrouped' not in file.name]
+        concat_arg = ['cat'] + files_to_combine + ['>'] + [str(output_path_arg.joinpath(str(file_arg.name).replace('R1', read)))]
+        subprocess.call(' '.join(concat_arg), shell=True)
+
+    print_runtime(f'Concatenated {file_arg.name} .')
+
+
 # --------------------------------------------------
 def main() -> None:
     """ Insert docstring here """
@@ -147,6 +166,10 @@ def main() -> None:
     # deal with output directory
     if not args.output_path.exists():
         Path(args.output_path).mkdir(parents=False, exist_ok=True)
+    # deal with output directory
+    if args.concatenate_path:
+        if not args.concatenate_path.exists():
+            Path(args.concatenate_path).mkdir(parents=False, exist_ok=True)
 
     # constants
     qiaseq_primers: dict = {
@@ -170,11 +193,16 @@ def main() -> None:
         for pool in args.specific_pools:
             region_list += qiaseq_pools[pool]
         demux_primers_dict = {key: qiaseq_primers[key] for key in region_list}
-    if args.specific_regions:
+    elif args.specific_regions:
         demux_primers_dict = {key: qiaseq_primers[key] for key in args.specific_regions}
+    else:
+        demux_primers_dict = {key: value for key, value in qiaseq_primers.items()}
 
     for file in args.input_path.glob('*_R1_*.fastq.gz'):
         perform_trim(file, args.output_path, demux_primers_dict)
+        if args.concatenate_path:
+            condense_files(file, args.output_path, args.concatenate_path)
+
 def print_runtime(action) -> None:
     """ Return the time and some defined action. """
     print(f'[{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}] {action}')
