@@ -102,6 +102,7 @@ def perform_trim(file_arg: Path, output_path_arg:Path, demux_primers_dict_arg: d
 
         parallel_str = f"\
             cutadapt \
+            --minimum-length 1 \
             --pair-adapters \
             --pair-filter any \
             --match-read-wildcards \
