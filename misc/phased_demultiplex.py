@@ -3,8 +3,7 @@
 Purpose: Helper script to demultiplex phased primers using a subprocess wrapper.
 """
 __author__ = "Erick Samera"
-__version__ = "1.1.0"
-
+__version__ = "1.2.0"
 # TODO: implement support for custom primers
 
 # --------------------------------------------------
@@ -24,26 +23,34 @@ def get_args() -> Namespace:
     parser = ArgumentParser(
         #usage='%(prog)s',
         description="Helper script to demultiplex phased primers using a subprocess wrapper.",
-        epilog=f"v{__version__} : {__author__} | First stable iteration.",
+        epilog=f"v{__version__} : {__author__} | Stable iteration, with some custom options",
         formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         'input_path',
         type=Path,
-        help="path of directory containing fastq/fastq.gz")
+        help="path of directory containing fastq(.gz)")
     parser.add_argument(
         '-o',
         '--out',
         dest='output_path',
         metavar='PATH',
         type=Path,
-        help="path of directory to output demultiplexed fastq/fastq.gz")
+        help="path of directory to output demultiplexed fastq(.gz)")
     parser.add_argument(
         '-c',
         '--cat',
         dest='concatenate_path',
         metavar='PATH',
         type=Path,
-        help="path of directory to output concatenated fastq/fastq.gz")
+        help="path of directory to output concatenated fastq(.gz), set this to concatenate 16S regions after processing")
+    parser.add_argument(
+        '-j',
+        '--jobs',
+        dest='jobs',
+        metavar='INT',
+        type=int,
+        default=4,
+        help="number of jobs to generate in parallel")
     # --------------------------------------------------
     group_custom_regions = parser.add_argument_group(
         title='custom region options')
@@ -54,14 +61,14 @@ def get_args() -> Namespace:
         dest='specific_regions',
         metavar='V-REGIONS',
         type=str,
-        help='save computation time: enter in specific QIAseq regions like this "V1V2;V2V4" to only use specific primers')
+        help='save computation time: enter specific QIAseq regions (ex: "V1V2;V2V3;V4V5") to only use specific primers')
     mut_ex_custom.add_argument(
         '-p',
         '--pools',
         dest='specific_pools',
         metavar='POOLS',
         type=str,
-        help='save computation time: enter in specific QIAseq pools like this "1;2" to only use specific primer pools')
+        help='save computation time: enter specific QIAseq pools (ex: "1;2") to only use specific primer pools')
 
     args = parser.parse_args()
 
@@ -80,9 +87,21 @@ def get_args() -> Namespace:
 
     return args
 # --------------------------------------------------
-def perform_trim(file_arg: Path, output_path_arg:Path, demux_primers_dict_arg: dict) -> None:
-    start = time.time()
-    print_runtime(f'Demultiplexing {file_arg.name} with {[primer for primer in demux_primers_dict_arg]} ...')
+def perform_trim(args: Namespace, file_arg: Path, output_path_arg: Path, demux_primers_dict_arg: dict) -> None:
+    """
+    Function performs fastq trimming in parallel with cutadapt.
+
+    Parameters:
+        file_arg (Path): path to the input .fastq(.gz) file
+        output_path_arg (Path): path to the output directory
+        demux_primers_dict_arg (dict): dictionary of primers to use in demultiplexing
+
+    Returns:
+        None
+    """
+    start_time = time.time()
+    print_runtime(f'Demultiplexing {file_arg.name} with {list(demux_primers_dict_arg)} ...')
+
     for index, primer_info in enumerate(demux_primers_dict_arg.items()):
         primer_name, primer_seqs = primer_info
 
@@ -103,8 +122,8 @@ def perform_trim(file_arg: Path, output_path_arg:Path, demux_primers_dict_arg: d
             file_variables['r1_intermediate_file'] = output_path_arg.joinpath(r1_output_processed)
 
         r2_file_variables: dict = {}
-        for r1_file_variable in file_variables:
-            r2_file_variables[r1_file_variable.replace('r1', 'r2')] = Path(str(file_variables[r1_file_variable]).replace('R1', 'R2'))
+        for r1_file_variable_key, r1_file_variable_value in file_variables.items():
+            r2_file_variables[r1_file_variable_key.replace('r1', 'r2')] = Path(str(r1_file_variable_value).replace('R1', 'R2'))
         file_variables.update(r2_file_variables)
 
         parallel_str = f"\
@@ -124,39 +143,48 @@ def perform_trim(file_arg: Path, output_path_arg:Path, demux_primers_dict_arg: d
         with subprocess.Popen([
                 'parallel',
                 '--link',
-                '-j', '4',
+                '-j', f'{args.jobs}',
                 f'{parallel_str}',
                 ':::', f"{file_variables['r1_path']}", ':::', f"{file_variables['r2_path']}"], stdout=subprocess.PIPE) as output:
             pass
 
     for index, output_file in enumerate(output_path_arg.glob(f'{str(Path(file_arg.stem).stem)}_intermediate_*.fastq.gz')):
-            r1_intermediate_file = output_file
-            r2_intermediate_file = Path(str(output_file).replace('R1', 'R2'))
-            if index < len(demux_primers_dict_arg):
-                os.remove(r1_intermediate_file)
-                os.remove(r2_intermediate_file)
-            else:
-                old_name_replaced = str(Path(r1_intermediate_file.stem).stem).replace(f"_intermediate_{index}", "")
-                old_name_raw = old_name_replaced.split('_')
-                old_name_raw.insert(3, 'ungrouped')
-                r1_new_name = f"{'_'.join(old_name_raw)}.fastq.gz"
-                r2_new_name = r1_new_name.replace('R1', 'R2')
-                os.rename(r1_intermediate_file, r1_intermediate_file.parent.joinpath(r1_new_name))
-                os.rename(r2_intermediate_file, r1_intermediate_file.parent.joinpath(r2_new_name))
-    end = time.time()
-    print_runtime(f'Demultiplexed {file_arg.name} with {[primer for primer in demux_primers_dict_arg]} in {round(end - start, 3)} s.')
+        r1_intermediate_file = output_file
+        r2_intermediate_file = Path(str(output_file).replace('R1', 'R2'))
+        if index < len(demux_primers_dict_arg):
+            os.remove(r1_intermediate_file)
+            os.remove(r2_intermediate_file)
+        else:
+            old_name_replaced = str(Path(r1_intermediate_file.stem).stem).replace(f"_intermediate_{index}", "")
+            old_name_raw = old_name_replaced.split('_')
+            old_name_raw.insert(3, 'ungrouped')
+            r1_new_name = f"{'_'.join(old_name_raw)}.fastq.gz"
+            r2_new_name = r1_new_name.replace('R1', 'R2')
+            os.rename(r1_intermediate_file, r1_intermediate_file.parent.joinpath(r1_new_name))
+            os.rename(r2_intermediate_file, r1_intermediate_file.parent.joinpath(r2_new_name))
+    end_time = time.time()
+    print_runtime(f'Demultiplexed {file_arg.name} with {list(demux_primers_dict_arg)} in {round(end_time - start_time, 3)} s.')
 
-def condense_files(file_arg: Path, intermediate_output_path_parg: Path, output_path_arg: Path):
+def condense_files(file_arg: Path, intermediate_output_path_arg: Path, output_path_arg: Path) -> None:
+    """
+    Function concatenates files together to make it easier to process with qiime2.
+
+    Parameters:
+        file_arg (Path): path of input sample
+        intermediate_output_path_arg (Path): path of primer-trimmed output
+        output_path_arg (Path): path to output concatenated primer-trimmed files
+
+    Returns:
+        None
+    """
     file_prefix = file_arg.stem.split('_')[0]
-
+    start_time = time.time()
     for read in ('R1', 'R2'):
-        files_to_combine = [str(file) for file in intermediate_output_path_parg.glob(f'{file_prefix}*{read}*') if 'ungrouped' not in file.name]
+        files_to_combine = [str(file) for file in intermediate_output_path_arg.glob(f'{file_prefix}*{read}*') if (('ungrouped' not in file.name) and ('ITS' not in file.name))]
         concat_arg = ['cat'] + files_to_combine + ['>'] + [str(output_path_arg.joinpath(str(file_arg.name).replace('R1', read)))]
         subprocess.call(' '.join(concat_arg), shell=True)
-
-    print_runtime(f'Concatenated {file_arg.name} .')
-
-
+    end_time = time.time()
+    print_runtime(f'Concatenated {file_arg.name} in {round(end_time - start_time, 3)} s.')
 # --------------------------------------------------
 def main() -> None:
     """ Insert docstring here """
@@ -199,7 +227,11 @@ def main() -> None:
         demux_primers_dict = {key: value for key, value in qiaseq_primers.items()}
 
     for file in args.input_path.glob('*_R1_*.fastq.gz'):
-        perform_trim(file, args.output_path, demux_primers_dict)
+        perform_trim(
+            args=args,
+            file_arg=file,
+            output_path_arg=args.output_path,
+            demux_primers_dict_arg=demux_primers_dict)
         if args.concatenate_path:
             condense_files(file, args.output_path, args.concatenate_path)
 
