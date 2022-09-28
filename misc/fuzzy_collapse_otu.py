@@ -3,8 +3,11 @@
 Purpose: Helper script to create consistent OTU tables and taxonomy to the species level.
 """
 __author__ = "Erick Samera"
-__version__ = "1.0.0"
+__version__ = "1.0.1"
 __comments__ = "stable"
+
+# TODO: compare between fuzzy-match types
+# TODO: add option to choose between fuzzy-match types in CLI
 
 # --------------------------------------------------
 from argparse import (
@@ -184,12 +187,11 @@ def _process_csv(args, path_arg: Path, txid_dict_arg: dict) -> dict:
                 
                 # eukaryotes are classified in superkingdom eukaryota
                 # bacteria are classified into kingdom prokaryota
-                """
+                
                 if 'superkingdom' in [taxon['rank'] for taxon in taxonomy_list]:
                     allowed_taxonomy = ('superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species')
                 else:
-                """
-                allowed_taxonomy = ('kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species')
+                    allowed_taxonomy = ('kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species')
                 processed_taxonomy = [taxon['name'] for taxon in taxonomy_list if taxon['rank'] in allowed_taxonomy]
                 processed_taxonomy_str = '; '.join(processed_taxonomy)
             elif not matched_taxonomy_result:
