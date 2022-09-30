@@ -3,11 +3,8 @@
 Purpose: Helper script to create consistent OTU tables and taxonomy to the species level.
 """
 __author__ = "Erick Samera"
-__version__ = "1.0.1"
-__comments__ = "stable"
-
-# TODO: compare between fuzzy-match types
-# TODO: add option to choose between fuzzy-match types in CLI
+__version__ = "2.0.0"
+__comments__ = "very stable"
 
 # --------------------------------------------------
 from argparse import (
@@ -16,10 +13,9 @@ from argparse import (
     ArgumentDefaultsHelpFormatter)
 from pathlib import Path
 # --------------------------------------------------
-import pandas as pd
-import pathlib
 import time
 import csv
+import pandas as pd
 from rapidfuzz import process, fuzz
 # --------------------------------------------------
 def get_args() -> Namespace:
@@ -61,12 +57,34 @@ def get_args() -> Namespace:
     group_debug = parser.add_argument_group(
         title='debugging arguments')
     group_debug.add_argument(
-        '--output_mismatches',
+        '--output-mismatches',
         dest='output_mismatches_path',
         metavar='FILEPATH',
         type=Path,
-        required=True,
         help='path to output taxonomic values that did not pass threshold')
+    group_debug.add_argument(
+        '--scorer',
+        dest='scorer',
+        metavar='NAME',
+        choices=['ratio', 'QRatio', 'partial_ratio'],
+        type=str,
+        default='partial_ratio',
+        help='scorer for fuzzy matching [ratio, QRatio, partial_ratio]')
+    group_debug.add_argument(
+        '--match-db',
+        dest='match_db',
+        metavar='DATABASE',
+        choices=['taxonomy', 'all'],
+        type=str,
+        default='taxonomy',
+        help='taxonomy: match species against species db, etc.; all: search everything (use ratio scorer, very computationally intensive)')
+    group_debug.add_argument(
+        '--match-threshold',
+        dest='match_threshold',
+        metavar='INT',
+        type=int,
+        default=99,
+        help='0..100, threshold for fuzzy matches')
 
     args = parser.parse_args()
 
@@ -90,7 +108,22 @@ def _process_csv(args, path_arg: Path, txid_dict_arg: dict) -> dict:
     """
 
     start_time = time.time()
-    _processed_dict: dict = {}
+    _processed_otus: list = []
+
+    taxonomy_levels: dict = {
+        6: ['species', 'strain'],
+        5: ['genus'],
+        4: ['family'],
+        3: ['order'],
+        2: ['class'],
+        1: ['phylum'],
+        0: ['kingdom', 'superkingdom']
+    }
+    scorer: dict = {
+        'ratio': fuzz.ratio,
+        'QRatio': fuzz.QRatio,
+        'partial_ratio': fuzz.partial_ratio
+    }
 
     def _compare_with_dict(taxon_str_arg: str, taxon_level_arg: int) -> dict:
         """
@@ -99,38 +132,37 @@ def _process_csv(args, path_arg: Path, txid_dict_arg: dict) -> dict:
         Parameters:
             taxon_str_arg (str): taxon name
             taxon_level_arg (int): taxon level, [0, 6], 6 being the most specific
-        
+
         Returns:
             best_match (dict): dictionary of best matched txid
                 score:  match score
                 txid:   txid from NCBI txid_dict_arg
                 name:   scientific name of match
         """
-        taxonomy_levels: dict = {
-            6: ['species', 'strain'],
-            5: ['genus'],
-            4: ['family'],
-            3: ['order'],
-            2: ['class'],
-            1: ['phylum'],
-            0: ['kingdom', 'superkingdom']
-        }
 
-        total_matches = []
+        total_matches: list = []
+        match_db: list = []
 
-        for taxonomy_synonym in taxonomy_levels[taxon_level_arg]:
-            fuzzy_match = process.extract(taxon_str_arg, list(txid_dict_arg['names'][taxonomy_synonym].keys()), scorer=fuzz.partial_ratio, limit=1)
+        if args.match_db == 'taxonomy':
+            match_db = taxonomy_levels[taxon_level_arg]
+        elif args.match_db == 'all':
+            for i in range(7):
+                match_db += taxonomy_levels[i]
+
+        for taxonomy_synonym in match_db:
+            fuzzy_match = process.extract(taxon_str_arg, list(txid_dict_arg['names'][taxonomy_synonym].keys()), scorer=scorer[args.scorer], limit=1)
             match_name = fuzzy_match[0][0]
             match_score = fuzzy_match[0][1]
             match_txid = txid_dict_arg['names'][taxonomy_synonym][match_name]
             match = {'score': match_score, 'txid': match_txid, 'name': match_name}
             total_matches.append(match)
         best_match = sorted(total_matches, key=lambda match: match['score'], reverse=True)[0]
-        if round(best_match['score']) >= 94:
+        
+        if round(best_match['score']) >= args.match_threshold:
             return best_match
         else:
             if args.output_mismatches_path:
-                with open(args.output_mismatches_path, 'a', encoding='utf8') as mismatches_file: 
+                with open(args.output_mismatches_path, 'a', encoding='utf8') as mismatches_file:
                     mismatches_file.write(f"{taxon_str_arg}\t{taxon_level_arg}\t{best_match['name']}\t{best_match['txid']}\t{best_match['score']}\n")
             return False
     def _convert_taxonomy(taxonomy_list_arg: list) -> tuple:
@@ -139,27 +171,29 @@ def _process_csv(args, path_arg: Path, txid_dict_arg: dict) -> dict:
 
         Parameters:
             taxonomy_list_arg (list): list of txid taxonomy to parse
-        
+
         Returns:
             (tuple): tuple of txid translated to scientific name and rank
         """
         return tuple({'name': txid_dict_arg['nodes'][txid]['name'], 'rank': txid_dict_arg['nodes'][txid]['rank']} for txid in taxonomy_list_arg)
     with open(path_arg, 'r', encoding='utf8') as otu_csv_file:
-        
+
         # skip the header
         all_lines: list = [value for value in csv.DictReader(otu_csv_file)]
 
         # initialize the result counter for printing
         result_count: int  = 0
-        
+
         for line in all_lines:
+            otu_entry_dict: dict = {'Name': line['Name']}
+
             result_count += 1
             taxonomy = [taxon.strip() for taxon in line["Taxonomy"].split(';')]
-            samples = [sample.replace("Abundance", "").strip() for sample in list(line.keys()) if ("Abundance" in sample) and not ("Combined" in sample)]
+            samples = [sample.replace("Abundance", "").strip() for sample in list(line.keys()) if "Abundance" in sample and not "Combined" in sample]
 
             # initialize the matched taxonomy result
             matched_taxonomy_result: str = ''
-            
+
             # starting from the most narrowed taxonomy, try to find a match
             for taxonomy_i, taxonomy_level_str in enumerate(taxonomy[::-1]):
                 # counting backwards from the list, also make the numbers count down
@@ -176,42 +210,49 @@ def _process_csv(args, path_arg: Path, txid_dict_arg: dict) -> dict:
                     ))
                 if not filtered_strings:
                     taxonomy_level_str = taxonomy_level_str.split('(')[0].strip()
+                    taxonomy_level_str = taxonomy_level_str.replace('[', '').replace(']', '')
                     matched_taxonomy_result = _compare_with_dict(taxonomy_level_str, actual_taxonomy_level)
                     if matched_taxonomy_result:
                         break
                 else:
-                    pass
+                    continue
 
             if matched_taxonomy_result:
                 taxonomy_list = _convert_taxonomy(txid_dict_arg['nodes'][matched_taxonomy_result['txid']]['taxonomy'][::-1])
-                
+
                 # eukaryotes are classified in superkingdom eukaryota
-                # bacteria are classified into kingdom prokaryota
-                
+                # bacteria and archaea are classified into kingdom prokaryota
+
                 if 'superkingdom' in [taxon['rank'] for taxon in taxonomy_list]:
                     allowed_taxonomy = ('superkingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species')
                 else:
                     allowed_taxonomy = ('kingdom', 'phylum', 'class', 'order', 'family', 'genus', 'species')
-                processed_taxonomy = [taxon['name'] for taxon in taxonomy_list if taxon['rank'] in allowed_taxonomy]
-                processed_taxonomy_str = '; '.join(processed_taxonomy)
+
+                pre_processed_taxonomy = [taxon['name'] for taxon in taxonomy_list if taxon['rank'] in allowed_taxonomy]
+
+                # add 'unclassified' taxonomy entries
+                if len(pre_processed_taxonomy) < len(allowed_taxonomy):
+                    processed_taxonomy = pre_processed_taxonomy
+                    highest_level = pre_processed_taxonomy[-1]
+                    for i in range(len(allowed_taxonomy) - len(processed_taxonomy)):
+                        processed_taxonomy.append(f'Unclassified {highest_level}')
+                else:
+                    processed_taxonomy = pre_processed_taxonomy
             elif not matched_taxonomy_result:
-                processed_taxonomy_str = 'N/A'
+                processed_taxonomy = 'N/A'
+
+            otu_entry_dict['Taxonomy'] = '; '.join(processed_taxonomy)
+            otu_entry_dict['Sequence'] = line['Sequence']
 
             for sample in samples:
                 sample_key = f"{sample} Abundance"
-                if not processed_taxonomy_str in _processed_dict:
-                    narrowest_taxonomy = [taxon.strip() for taxon in processed_taxonomy_str.split(';')][-1]
-                    _processed_dict[processed_taxonomy_str] = {
-                        'highest_taxonomy': narrowest_taxonomy, 
-                        'taxonomy': processed_taxonomy_str}
-                if not sample in _processed_dict[processed_taxonomy_str]:
-                    _processed_dict[processed_taxonomy_str][sample] = 0
-
-                _processed_dict[processed_taxonomy_str][sample] += int(line[sample_key])
+                otu_entry_dict[sample] = int(line[sample_key])
 
             if result_count % 500 == 0:
                 print_runtime(f'Completed: {result_count}/{len(all_lines)} | ({round(time.time() - start_time, 3)} s. elapsed)')
-    return _processed_dict
+
+            _processed_otus.append(otu_entry_dict)
+    return _processed_otus
 def _create_txid_dict(names_dmp_path_arg: Path, nodes_dmp_path_arg: Path) -> dict:
     """
     Function creates a dictionary based on NCBI names and nodes.
@@ -219,7 +260,7 @@ def _create_txid_dict(names_dmp_path_arg: Path, nodes_dmp_path_arg: Path) -> dic
     Parameters:
         names_dmp_path_arg (Path): path of names.dmp file
         nodes_dmp_path_arg (Path): path of nodes.dmp file
-    
+
     Returns:
         (dict): processed txid dictionary
             nodes: node dictionary, keys are txid
@@ -230,7 +271,7 @@ def _create_txid_dict(names_dmp_path_arg: Path, nodes_dmp_path_arg: Path) -> dic
     _nodes_dict: dict = {}
     with open(names_dmp_path_arg, 'r', encoding='utf8') as names_dmp_file, \
          open(nodes_dmp_path_arg, 'r', encoding='utf8') as nodes_dmp_file:
-        
+
         # for each line in the node file, create a txid entry with taxonomy info
         for line in nodes_dmp_file.readlines():
             line_args = [line_arg.strip() for line_arg in line.split('|')]
@@ -252,8 +293,8 @@ def _create_txid_dict(names_dmp_path_arg: Path, nodes_dmp_path_arg: Path) -> dic
                 txid = int(line_args[0])
                 if 'scientific name' in line_args:
                     _nodes_dict[txid]['name'] = taxon_name
-                try: 
-                    
+                try:
+
                     _names_dict[_nodes_dict[txid]['rank']][taxon_name] = txid
                 except KeyError:
                     _names_dict[_nodes_dict[txid]['rank']] = {}
@@ -262,7 +303,7 @@ def _create_txid_dict(names_dmp_path_arg: Path, nodes_dmp_path_arg: Path) -> dic
     # post-processing of the node dictionary to create taxonomy
     for entry, _ in _nodes_dict.items():
         _nodes_dict[entry]['taxonomy']: list = [entry]
-        
+
         current_level = _nodes_dict[entry]['parent_node']
         while _nodes_dict[entry]['taxonomy'][-1] != 1:
             _nodes_dict[entry]['taxonomy'].append(current_level)
@@ -279,9 +320,10 @@ def main() -> None:
     if args.output_mismatches_path:
         with open(args.output_mismatches_path, 'w', encoding='utf8') as mismatches_file:
             mismatches_file.write(f"taxon_query\ttaxon_level\tbest_match\tbest_match_score\tbest_match_score\n")
-
-    otu_DataFrame = pd.DataFrame.from_dict(_process_csv(args, args.input_path, txid_dict), orient='index')
-    otu_DataFrame_columns = ['highest_taxonomy', 'taxonomy'] + [column for column in otu_DataFrame.columns.to_list() if column not in ('highest_taxonomy', 'taxonomy')]
+    otu_DataFrame = pd.DataFrame(_process_csv(args, args.input_path, txid_dict))
+    otu_DataFrame_columns = ['Name', 'Taxonomy'] \
+        + [column for column in otu_DataFrame.columns.to_list() if not column in ('Name', 'Taxonomy', 'Sequence')]\
+        + ['Sequence']
     if args.output_path:
         otu_DataFrame[otu_DataFrame_columns].to_csv(args.output_path, index=False)
     else:
