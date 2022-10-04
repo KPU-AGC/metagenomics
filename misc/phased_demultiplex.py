@@ -3,7 +3,8 @@
 Purpose: Helper script to demultiplex phased primers using a subprocess wrapper.
 """
 __author__ = "Erick Samera"
-__version__ = "1.2.0"
+__version__ = "1.2.1"
+__comment__ = 'stable'
 # TODO: implement support for custom primers
 
 # --------------------------------------------------
@@ -23,7 +24,7 @@ def get_args() -> Namespace:
     parser = ArgumentParser(
         #usage='%(prog)s',
         description="Helper script to demultiplex phased primers using a subprocess wrapper.",
-        epilog=f"v{__version__} : {__author__} | Stable iteration, with some custom options",
+        epilog=f"v{__version__} : {__author__} | {__comment__}",
         formatter_class=ArgumentDefaultsHelpFormatter)
     parser.add_argument(
         'input_path',
@@ -164,7 +165,6 @@ def perform_trim(args: Namespace, file_arg: Path, output_path_arg: Path, demux_p
             os.rename(r2_intermediate_file, r1_intermediate_file.parent.joinpath(r2_new_name))
     end_time = time.time()
     print_runtime(f'Demultiplexed {file_arg.name} with {list(demux_primers_dict_arg)} in {round(end_time - start_time, 3)} s.')
-
 def condense_files(file_arg: Path, intermediate_output_path_arg: Path, output_path_arg: Path) -> None:
     """
     Function concatenates files together to make it easier to process with qiime2.
@@ -234,7 +234,6 @@ def main() -> None:
             demux_primers_dict_arg=demux_primers_dict)
         if args.concatenate_path:
             condense_files(file, args.output_path, args.concatenate_path)
-
 def print_runtime(action) -> None:
     """ Return the time and some defined action. """
     print(f'[{time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())}] {action}')
