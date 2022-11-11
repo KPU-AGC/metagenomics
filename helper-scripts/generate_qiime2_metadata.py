@@ -2,7 +2,7 @@
 """
 Author : Erick Samera
 Date   : 2022-11-08
-Purpose: Process a directory of IonTorrent-formatted fastq and create a metadata file.
+Purpose: Process a directory of demultiplexed .fastq(.gz) files and create a metadata file.
 """
 __author__ = "Erick Samera"
 __version__ = "1.0.0"
@@ -50,7 +50,9 @@ def _both_reads_contained(list_files_arg: list, list_samples_arg: list) -> bool:
     """
 
     for sample in list_samples_arg:
-        if (f'{sample}_S1_L001_R1_001.fastq.gz' not in list_files_arg) or (f'{sample}_S1_L001_R2_001.fastq.gz' not in list_files_arg):
+        r1_is_contained = True if [file for file in list_files_arg if ('R1' in file and file.startswith(f'{sample}_'))] else False
+        r2_is_contained = True if [file for file in list_files_arg if ('R2' in file and file.startswith(f'{sample}_'))] else False
+        if not r1_is_contained or not r2_is_contained:
             return False
     return True
 def _generate_metadata_file(dir_path_arg: Path) -> None:
