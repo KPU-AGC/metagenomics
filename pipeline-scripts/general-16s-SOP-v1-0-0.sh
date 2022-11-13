@@ -5,8 +5,8 @@
 # Make sure that the proper conda environment is active before running this script.
 
 #------------ I/O Variables -----------#
-INPUT_DIR="test_data/"
-OUTPUT_DIR="output/"
+INPUT_DIR="test_data"
+OUTPUT_DIR="output"
 
 #-------------- Variables -------------#
 METADATA="metadata.txt"
@@ -71,6 +71,6 @@ qiime taxa filter-table \
 
 qiime taxa barplot \
     --i-table $OUTPUT_DIR/cluster_output/clustered_table_filt_contam.qza \
-    --i-taxonomy taxa/classification.qza \
+    --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
     --m-metadata-file $METADATA \
     --o-visualization $OUTPUT_DIR/taxa/taxa_barplot.qzv
