@@ -73,7 +73,7 @@ def _generate_metadata_file(dir_path_arg: Path) -> None:
     if not _both_reads_contained(list_of_files, unique_samples):
         print("Not every file seems to have both R1 and R2. Check this before proceeding.")
     elif _both_reads_contained(list_of_files, unique_samples):
-        with open(dir_path_arg.joinpath('metadata.tab'), 'w') as metadata_output:
+        with open(dir_path_arg.parent.joinpath('metadata.tab'), 'w') as metadata_output:
             metadata_output.write("sample-id\t\n")
             metadata_output.write("#q2:types\t\n")
             for sample in unique_samples:
