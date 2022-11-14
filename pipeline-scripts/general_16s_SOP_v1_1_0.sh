@@ -12,7 +12,7 @@ OUTPUT_DIR="output"
 
 #-------------- Variables -------------#
 METADATA="metadata.tab"
-NCORES=4
+NCORES=8
 REFERENCE_SEQUENCES="../resources/silva-138-99-seqs.qza"
 CLASSIFIER="../resources/classifiers/qiaseq-v3v4-classifier.qza"
 SEPP="../resources/sepp/sepp-refs-silva-128.qza"
@@ -33,7 +33,6 @@ qiime cutadapt trim-paired \
     --p-no-indels \
     --p-cores $NCORES \
     --o-trimmed-sequences $OUTPUT_DIR/reads_trimmed.qza
-
 
 qiime vsearch join-pairs \
     --i-demultiplexed-seqs $OUTPUT_DIR/reads_trimmed.qza \
@@ -75,7 +74,6 @@ qiime feature-table filter-seqs \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
     --o-filtered-data $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza
 
-
 qiime feature-classifier classify-sklearn \
     --i-reads $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza \
     --i-classifier $CLASSIFIER \
@@ -97,15 +95,13 @@ qiime tools export \
     --input-path $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
     --output-path $OUTPUT_DIR/exported-feature-table
 
-
 qiime taxa barplot \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
     --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
     --m-metadata-file $METADATA \
     --o-visualization $OUTPUT_DIR/taxa/taxa_barplot.qzv
 
-qiime fragment-insertion sepp \
-    --i-representative-sequences $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza \
-    --i-reference-database $SEPP \
-    --p-threads $NCORES \
-    --output-dir $OUTPUT_DIR/rooted-tree
+qiime phylogeny align-to-tree-mafft-fasttree \
+    --i-sequences $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza \
+    --p-n-threads $NCORES \
+    --output-dir $OUTPUT_DIR/tree
