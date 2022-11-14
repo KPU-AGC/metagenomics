@@ -128,5 +128,8 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-# Sequence Files
+# Project files
+metadata.tab
 .fastq.gz
+output/
+raw-data/
