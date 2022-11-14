@@ -75,13 +75,6 @@ qiime feature-table filter-seqs \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
     --o-filtered-data $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza
 
-qiime feature-table summarize \
-    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
-    --o-visualization $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qzv
-
-qiime tools export \
-    --input-path $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
-    --output-path $OUTPUT_DIR/exported-feature-table
 
 qiime feature-classifier classify-sklearn \
     --i-reads $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza \
@@ -95,6 +88,15 @@ qiime taxa filter-table \
     --p-include p__ \
     --p-exclude mitochondria,chloroplast \
     --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza
+
+qiime feature-table summarize \
+    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
+    --o-visualization $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qzv
+
+qiime tools export \
+    --input-path $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
+    --output-path $OUTPUT_DIR/exported-feature-table
+
 
 qiime taxa barplot \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
