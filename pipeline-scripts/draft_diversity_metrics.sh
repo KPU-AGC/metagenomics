@@ -43,4 +43,4 @@ qiime diversity core-metrics-phylogenetic \
    --p-sampling-depth $MIN_SAMPLING_DEPTH \
    --m-metadata-file $METADATA \
    --p-n-jobs-or-threads $NCORES \
-   --output-dir diversity
+   --output-dir $OUTPUT_DIR/diversity
