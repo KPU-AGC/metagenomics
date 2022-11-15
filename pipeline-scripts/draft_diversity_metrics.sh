@@ -9,7 +9,7 @@ INPUT_DIR="raw_data"
 OUTPUT_DIR="output"
 
 #-------------- Variables -------------#
-METADATA="metadata.txt"
+METADATA="metadata.tab"
 NCORES=8
 REFERENCE_SEQUENCES="../resources/silva-138-99-seqs.qza"
 CLASSIFIER="../resources/classifiers/qiaseq-v3v4-classifier.qza"
