@@ -43,16 +43,22 @@ qiime quality-filter q-score \
     --o-filter-stats $OUTPUT_DIR/filt_stats.qza \
     --o-filtered-sequences $OUTPUT_DIR/reads_trimmed_joined_filt.qza
 
-qiime vsearch dereplicate-sequences \
-    --i-sequences $OUTPUT_DIR/reads_trimmed_joined_filt.qza \
-    --output-dir $OUTPUT_DIR/dereplicated
+qiime deblur denoise-16S \
+    --i-demultiplexed-seqs $OUTPUT_DIR/reads_trimmed_joined_filt.qza \
+    --p-trim-length 270 \
+    --p-sample-stats \
+    --p-min-reads 1 \
+    --p-jobs-to-start $NCORES \
+    --output-dir $OUTPUT_DIR/deblur-output
 
-qiime vsearch cluster-features-open-reference \
-    --i-sequences $OUTPUT_DIR/dereplicated/dereplicated_sequences.qza \
-    --i-table $OUTPUT_DIR/dereplicated/dereplicated_table.qza \
+qiime vsearch cluster-features-de-novo \
+    --i-sequences $OUTPUT_DIR/deblur-output/representative_sequences.qza \
+    --i-table $OUTPUT_DIR/deblur-output/table.qza \
     --i-reference-sequences $REFERENCE_SEQUENCES \
     --p-perc-identity 0.97 \
-    --output-dir $OUTPUT_DIR/cluster-output
+    --p-threads $CORES \
+    --output-dir $OUTPUT_DIR/cluster-output \
+    --verbose
 
 qiime vsearch uchime-denovo \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table.qza \
@@ -61,7 +67,7 @@ qiime vsearch uchime-denovo \
 
 qiime feature-table filter-features-conditionally \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table.qza \
-    --p-abundance 0.01 \
+    --p-abundance 0.005 \
     --p-prevalence 0.01 \
     --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza
 
