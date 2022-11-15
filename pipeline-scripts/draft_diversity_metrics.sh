@@ -9,7 +9,7 @@ INPUT_DIR="raw_data"
 OUTPUT_DIR="output"
 
 #-------------- Variables -------------#
-METADATA="metadata.tab"
+METADATA="metadata.txt"
 NCORES=8
 REFERENCE_SEQUENCES="../resources/silva-138-99-seqs.qza"
 CLASSIFIER="../resources/classifiers/qiaseq-v3v4-classifier.qza"
@@ -26,7 +26,7 @@ qiime diversity alpha-rarefaction \
    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
    --p-max-depth $MAX_SAMPLING_DEPTH \
    --p-steps 20 \
-   --i-phylogeny $OUTPUT_DIR/tree/rooted-tree.qza \
+   --i-phylogeny $OUTPUT_DIR/tree/rooted_tree.qza \
    --m-metadata-file $METADATA \
    --output-dir $OUTPUT_DIR/alpha-rarefaction
 
@@ -34,12 +34,12 @@ qiime diversity alpha-rarefaction \
    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
    --p-max-depth $MAX_SAMPLING_DEPTH \
    --p-steps 20 \
-   --i-phylogeny $OUTPUT_DIR/tree/rooted-tree.qza \
+   --i-phylogeny $OUTPUT_DIR/tree/rooted_tree.qza \
    --o-visualization $OUTPUT_DIR/alpha-rarefaction/rarefaction_curves_eachsample.qzv
 
 qiime diversity core-metrics-phylogenetic \
    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
-   --i-phylogeny $OUTPUT_DIR/tree/rooted-tree.qza \
+   --i-phylogeny $OUTPUT_DIR/tree/rooted_tree.qza \
    --p-sampling-depth $MIN_SAMPLING_DEPTH \
    --m-metadata-file $METADATA \
    --p-n-jobs-or-threads $NCORES \
