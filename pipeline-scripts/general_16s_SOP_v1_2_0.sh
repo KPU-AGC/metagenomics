@@ -81,13 +81,13 @@ qiime feature-classifier classify-sklearn \
     --output-dir $OUTPUT_DIR/taxa
 
 qiime taxa collapse \
-  --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
+  --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
   --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
   --p-level 7 \
   --o-collapsed-table $OUTPUT_DIR/taxa/collapsed_taxonomy.qza
 
 qiime taxa filter-table \
-    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
+    --i-table $OUTPUT_DIR/cluster-output/collapsed_taxonomy.qza \
     --i-taxonomy $OUTPUT_DIR/taxa/collapsed_taxonomy.qza \
     --p-include p__ \
     --p-exclude mitochondria,chloroplast \
