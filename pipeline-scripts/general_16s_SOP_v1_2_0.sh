@@ -54,9 +54,8 @@ qiime deblur denoise-16S \
 qiime vsearch cluster-features-de-novo \
     --i-sequences $OUTPUT_DIR/deblur-output/representative_sequences.qza \
     --i-table $OUTPUT_DIR/deblur-output/table.qza \
-    --i-reference-sequences $REFERENCE_SEQUENCES \
     --p-perc-identity 0.97 \
-    --p-threads $CORES \
+    --p-threads $NCORES \
     --output-dir $OUTPUT_DIR/cluster-output \
     --verbose
 
