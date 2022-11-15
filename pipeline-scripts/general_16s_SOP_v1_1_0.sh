@@ -14,7 +14,7 @@ OUTPUT_DIR="output"
 METADATA="metadata.tab"
 NCORES=8
 REFERENCE_SEQUENCES="../resources/silva-138-99-seqs.qza"
-CLASSIFIER="../resources/classifiers/qiaseq-v3v4-classifier.qza"
+CLASSIFIER="../resources/classifiers/silva-138-99-nb-classifier.qza"
 SEPP="../resources/sepp/sepp-refs-silva-128.qza"
 
 mkdir $OUTPUT_DIR
@@ -66,7 +66,7 @@ qiime vsearch uchime-denovo \
 qiime feature-table filter-features-conditionally \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table.qza \
     --p-abundance 0.01 \
-    --p-prevalence 0.10 \
+    --p-prevalence 0.01 \
     --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza
 
 qiime feature-table filter-seqs \
