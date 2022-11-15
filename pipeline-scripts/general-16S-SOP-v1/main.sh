@@ -21,6 +21,9 @@ REFERENCE_SEQUENCES="../resources/silva-138-99-seqs.qza"
 CLASSIFIER="../resources/classifiers/silva-138-99-nb-classifier.qza"
 SEPP="../resources/sepp/sepp-refs-silva-128.qza"
 
+
+
+#--------------- Script ---------------#
 bash pipeline-scripts/general-16S-SOP-v1/_import_demultiplex.sh \
     $INPUT_DIR \
     $OUTPUT_DIR \
