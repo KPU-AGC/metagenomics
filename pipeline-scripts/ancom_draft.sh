@@ -13,8 +13,7 @@ METADATA="metadata.tab"
 NCORES=8
 REFERENCE_SEQUENCES="../resources/silva-138-99-seqs.qza"
 CLASSIFIER="../resources/classifiers/qiaseq-v3v4-classifier.qza"
-CATEGORY=""
-
+CATEGORY=$1
 
 qiime composition add-pseudocount \
    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
