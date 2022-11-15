@@ -27,7 +27,7 @@ qiime composition add-pseudocount \
    --o-composition-table $OUTPUT_DIR/cluster-output/clustered_table_pseudocount.qza
 
 qiime composition ancom \
-   --i-table $OUTPUT_DIR/taxa/collapsed_taxonomy.qza \
+   --i-table $OUTPUT_DIR/cluster-output/clustered_table_pseudocount.qza \
    --m-metadata-file $METADATA \
    --m-metadata-column $CATEGORY \
    --output-dir $OUTPUT_DIR/ancom_output
