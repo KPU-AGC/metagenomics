@@ -66,7 +66,7 @@ qiime vsearch uchime-denovo \
 qiime feature-table filter-features-conditionally \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table.qza \
     --p-abundance 0.01 \
-    --p-prevalence 0.10 \
+    --p-prevalence 0.01 \
     --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza
 
 qiime feature-table filter-seqs \
@@ -80,15 +80,9 @@ qiime feature-classifier classify-sklearn \
     --p-n-jobs $NCORES \
     --output-dir $OUTPUT_DIR/taxa
 
-qiime taxa collapse \
-  --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
-  --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
-  --p-level 7 \
-  --o-collapsed-table $OUTPUT_DIR/taxa/collapsed_taxonomy.qza
-
 qiime taxa filter-table \
-    --i-table $OUTPUT_DIR/cluster-output/collapsed_taxonomy.qza \
-    --i-taxonomy $OUTPUT_DIR/taxa/collapsed_taxonomy.qza \
+    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
+    --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
     --p-include p__ \
     --p-exclude mitochondria,chloroplast \
     --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza
@@ -103,7 +97,7 @@ qiime tools export \
 
 qiime taxa barplot \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
-    --i-taxonomy $OUTPUT_DIR/taxa/collapsed_taxonomy.qza \
+    --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
     --m-metadata-file $METADATA \
     --o-visualization $OUTPUT_DIR/taxa/taxa_barplot.qzv
 
