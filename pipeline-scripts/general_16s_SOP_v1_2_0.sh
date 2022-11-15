@@ -51,7 +51,7 @@ qiime deblur denoise-16S \
     --p-jobs-to-start $NCORES \
     --output-dir $OUTPUT_DIR/deblur-output
 
-qiime vsearch cluster-features-open-reference \
+qiime vsearch cluster-features-closed-reference \
     --i-sequences $OUTPUT_DIR/deblur-output/representative_sequences.qza \
     --i-table $OUTPUT_DIR/deblur-output/table.qza \
     --i-reference-sequences $REFERENCE_SEQUENCES \
