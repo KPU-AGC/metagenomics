@@ -15,13 +15,19 @@ REFERENCE_SEQUENCES="../resources/silva-138-99-seqs.qza"
 CLASSIFIER="../resources/classifiers/qiaseq-v3v4-classifier.qza"
 CATEGORY=$1
 
+qiime taxa collapse \
+  --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
+  --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
+  --p-level 6 \
+  --o-collapsed-table $OUTPUT_DIR/taxa/collapsed_taxonomy.qza
+
 qiime composition add-pseudocount \
-   --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
+   --i-table $OUTPUT_DIR/taxa/collapsed_taxonomy.qza \
    --p-pseudocount 1 \
    --o-composition-table $OUTPUT_DIR/cluster-output/clustered_table_pseudocount.qza
 
 qiime composition ancom \
-   --i-table $OUTPUT_DIR/cluster-output/clustered_table_pseudocount.qza \
+   --i-table $OUTPUT_DIR/taxa/collapsed_taxonomy.qza \
    --m-metadata-file $METADATA \
    --m-metadata-column $CATEGORY \
    --output-dir $OUTPUT_DIR/ancom_output
