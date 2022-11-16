@@ -12,7 +12,7 @@ OUTPUT_DIR="output"
 
 #-------------- Variables -------------#
 METADATA="metadata.tab"
-NCORES=8
+NCORES=4
 
 FORWARD_PRIMER="CCTACGGGNGGCWGCAG"
 REVERSE_PRIMER="GACTACHVGGGTATCTAATCC"
@@ -23,10 +23,62 @@ SEPP="../resources/sepp/sepp-refs-silva-128.qza"
 
 
 
+########################################
+
+#-------- Internal Variables ----------#
+SCRIPT_DIR=$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)
+SCRIPT_PARENT=$(dirname "$SCRIPT_DIR")
+PROJECT_DIR=$(dirname "$SCRIPT_PARENT")
+
+LOG_FILE=$PROJECT_DIR/$OUTPUT_DIR/log.log
+
 #--------------- Script ---------------#
-bash pipeline-scripts/general-16S-SOP-v1/_import_demultiplex.sh \
-    $INPUT_DIR \
-    $OUTPUT_DIR \
+mkdir $PROJECT_DIR/$OUTPUT_DIR
+
+bash $SCRIPT_DIR/_import_demultiplex.sh \
+    $PROJECT_DIR/$INPUT_DIR \
+    $PROJECT_DIR/$OUTPUT_DIR \
     $NCORES \
     $FORWARD_PRIMER \
-    $REVERSE_PRIMER
+    $REVERSE_PRIMER \
+    2>&1 | tee -a $LOG_FILE
+
+bash $SCRIPT_DIR/_quality_filter.sh \
+    $PROJECT_DIR/$INPUT_DIR \
+    $PROJECT_DIR/$OUTPUT_DIR \
+    2>&1 | tee -a $LOG_FILE
+
+bash $SCRIPT_DIR/_deblur_denoise_16S.sh \
+    $PROJECT_DIR/$INPUT_DIR \
+    $PROJECT_DIR/$OUTPUT_DIR \
+    $NCORES \
+    2>&1 | tee -a $LOG_FILE
+
+bash $SCRIPT_DIR/_cluster_features_open_reference.sh \
+    $PROJECT_DIR/$INPUT_DIR \
+    $PROJECT_DIR/$OUTPUT_DIR \
+    $REFERENCE_SEQUENCES \
+    2>&1 | tee -a $LOG_FILE
+
+bash $SCRIPT_DIR/_chimera_filtering_and_abundance_filtering.sh \
+    $PROJECT_DIR/$INPUT_DIR \
+    $PROJECT_DIR/$OUTPUT_DIR \
+    2>&1 | tee -a $LOG_FILE
+
+bash $SCRIPT_DIR/_classify_sklearn.sh \
+    $PROJECT_DIR/$INPUT_DIR \
+    $PROJECT_DIR/$OUTPUT_DIR \
+    $CLASSIFIER \
+    $NCORES \
+    2>&1 | tee -a $LOG_FILE
+
+bash $SCRIPT_DIR/_taxonomy_filtering.sh \
+    $PROJECT_DIR/$INPUT_DIR \
+    $PROJECT_DIR/$OUTPUT_DIR \
+    2>&1 | tee -a $LOG_FILE
+
+bash $SCRIPT_DIR/_taxa_barplot.sh \
+    $PROJECT_DIR/$INPUT_DIR \
+    $PROJECT_DIR/$OUTPUT_DIR \
+    $PROJECT_DIR/$METADATA \
+    2>&1 | tee -a $LOG_FILE

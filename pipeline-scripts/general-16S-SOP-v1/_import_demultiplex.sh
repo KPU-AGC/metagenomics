@@ -9,21 +9,23 @@ NCORES=$3
 FORWARD_PRIMER=$4
 REVERSE_PRIMER=$5
 
-qiime tools import \
+time qiime tools import \
     --type SampleData[PairedEndSequencesWithQuality] \
     --input-path $INPUT_DIR \
     --output-path $OUTPUT_DIR/reads.qza \
-    --input-format CasavaOneEightSingleLanePerSampleDirFmt
+    --input-format CasavaOneEightSingleLanePerSampleDirFmt 
 
-qiime cutadapt trim-paired \
+time qiime cutadapt trim-paired \
     --i-demultiplexed-sequences $OUTPUT_DIR/reads.qza \
     --p-anywhere-f $FORWARD_PRIMER \
     --p-anywhere-r $REVERSE_PRIMER \
     --p-discard-untrimmed \
     --p-no-indels \
     --p-cores $NCORES \
-    --o-trimmed-sequences $OUTPUT_DIR/reads_trimmed.qza
+    --o-trimmed-sequences $OUTPUT_DIR/reads_trimmed.qza \
+    --verbose \
 
-qiime vsearch join-pairs \
+time qiime vsearch join-pairs \
     --i-demultiplexed-seqs $OUTPUT_DIR/reads_trimmed.qza \
-    --o-joined-sequences $OUTPUT_DIR/reads_trimmed_joined.qza
+    --o-joined-sequences $OUTPUT_DIR/reads_trimmed_joined.qza \
+    --verbose
