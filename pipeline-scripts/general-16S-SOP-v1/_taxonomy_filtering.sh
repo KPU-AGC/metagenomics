@@ -7,6 +7,7 @@ OUTPUT_DIR=$2
 time qiime feature-table filter-features \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
     --p-filter-empty-samples \
+    --p-min-frequency 1 \
     --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filtered_again.qza \
     --verbose
 
