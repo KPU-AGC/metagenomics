@@ -69,7 +69,7 @@ qiime vsearch cluster-features-de-novo \
     --verbose
 
 qiime feature-classifier classify-sklearn \
-    --i-reads $OUTPUT_DIR/cluster-output/clustered_sequences \
+    --i-reads $OUTPUT_DIR/cluster-output/clustered_sequences.qza \
     --i-classifier $CLASSIFIER \
     --p-n-jobs $NCORES \
     --output-dir $OUTPUT_DIR/taxa
