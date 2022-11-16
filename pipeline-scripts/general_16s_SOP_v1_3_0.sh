@@ -68,50 +68,34 @@ qiime vsearch cluster-features-de-novo \
     --output-dir $OUTPUT_DIR/cluster-output \
     --verbose
 
-qiime vsearch uchime-denovo \
-    --i-table $OUTPUT_DIR/cluster-output/clustered_table.qza \
-    --i-sequences $OUTPUT_DIR/cluster-output/clustered_sequences.qza \
-    --output-dir $OUTPUT_DIR/chimera-filter-output
-
-qiime feature-table filter-seqs \
-    --i-data $OUTPUT_DIR/chimera-filter-output/nonchimeras.qza \
-    --i-table $OUTPUT_DIR/cluster-output/clustered_table.qza \
-    --o-filtered-data $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza
-
-qiime feature-table filter-features-conditionally \
-    --i-table $OUTPUT_DIR/cluster-output/clustered_table.qza \
-    --p-abundance 0.001 \
-    --p-prevalence 0.001 \
-    --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza
-
 qiime feature-classifier classify-sklearn \
-    --i-reads $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza \
+    --i-reads $OUTPUT_DIR/cluster-output/clustered_sequences \
     --i-classifier $CLASSIFIER \
     --p-n-jobs $NCORES \
     --output-dir $OUTPUT_DIR/taxa
 
 qiime taxa filter-table \
-    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
+    --i-table $OUTPUT_DIR/cluster-output/clustered_table.qza \
     --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
     --p-include p__ \
     --p-exclude mitochondria,chloroplast \
-    --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza
+    --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza
 
 qiime feature-table summarize \
-    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
-    --o-visualization $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qzv
+    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
+    --o-visualization $OUTPUT_DIR/cluster-output/clustered_table_filtered.qzv
 
 qiime tools export \
-    --input-path $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
+    --input-path $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
     --output-path $OUTPUT_DIR/exported-feature-table
 
 qiime taxa barplot \
-    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
+    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
     --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
     --m-metadata-file $METADATA \
     --o-visualization $OUTPUT_DIR/taxa/taxa_barplot.qzv
 
 qiime phylogeny align-to-tree-mafft-fasttree \
-    --i-sequences $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza \
+    --i-sequences $OUTPUT_DIR/chimera-filter-output/representative_sequences.qza \
     --p-n-threads $NCORES \
     --output-dir $OUTPUT_DIR/tree
