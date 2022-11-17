@@ -1,5 +1,5 @@
 #!/bin/bash
-# general_16s_SOP_v1_3_0.sh (qiime2-2022.8)
+# general_16S_SOP_v1_3.sh (qiime2-2022.8)
 
 # Program performs a general qiime2 (qiime2-2022.8) pipeline and eventually produces a taxa bar plot
 # and rooted phylogenetic tree.
@@ -13,9 +13,8 @@ OUTPUT_DIR="output"
 #-------------- Variables -------------#
 METADATA="metadata.tab"
 NCORES=8
-REFERENCE_SEQUENCES="../resources/silva-138-99-seqs.qza"
+REFERENCE_SEQUENCES="../resources/silva-138/silva-138-99-seqs.qza"
 CLASSIFIER="../resources/classifiers/silva-138-99-nb-classifier.qza"
-SEPP="../resources/sepp/sepp-refs-silva-128.qza"
 
 mkdir $OUTPUT_DIR
 
