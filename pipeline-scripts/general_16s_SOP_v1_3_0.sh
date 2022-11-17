@@ -1,5 +1,5 @@
 #!/bin/bash
-# general_16s_SOP_v1_1_0.sh (qiime2-2022.8)
+# general_16s_SOP_v1_3_0.sh (qiime2-2022.8)
 
 # Program performs a general qiime2 (qiime2-2022.8) pipeline and eventually produces a taxa bar plot
 # and rooted phylogenetic tree.
