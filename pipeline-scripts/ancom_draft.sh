@@ -16,7 +16,7 @@ CLASSIFIER="../resources/classifiers/qiaseq-v3v4-classifier.qza"
 CATEGORY=$1
 
 qiime taxa collapse \
-  --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
+  --i-table $OUTPUT_DIR/cluster-output/clustered_table_nonchimeric_decontam.qza \
   --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
   --p-level 6 \
   --o-collapsed-table $OUTPUT_DIR/taxa/collapsed_taxonomy.qza
