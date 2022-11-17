@@ -66,17 +66,17 @@ qiime vsearch uchime-denovo \
 
 qiime feature-table filter-features-conditionally \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table.qza \
-    --p-abundance 0.005 \
-    --p-prevalence 0.01 \
+    --p-abundance 0.001 \
+    --p-prevalence 0.001 \
     --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza
 
-qiime feature-table filter-seqs \
-    --i-data $OUTPUT_DIR/chimera-filter-output/nonchimeras.qza \
-    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
-    --o-filtered-data $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza
+# qiime feature-table filter-seqs \
+#     --i-data $OUTPUT_DIR/chimera-filter-output/nonchimeras.qza \
+#     --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
+#     --o-filtered-data $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza
 
 qiime feature-classifier classify-sklearn \
-    --i-reads $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza \
+    --i-reads $OUTPUT_DIR/chimera-filter-output/nonchimeras.qza \
     --i-classifier $CLASSIFIER \
     --p-n-jobs $NCORES \
     --output-dir $OUTPUT_DIR/taxa
