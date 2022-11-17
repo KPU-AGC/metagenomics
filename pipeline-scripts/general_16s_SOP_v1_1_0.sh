@@ -56,6 +56,7 @@ qiime vsearch cluster-features-open-reference \
     --i-table $OUTPUT_DIR/deblur-output/table.qza \
     --i-reference-sequences $REFERENCE_SEQUENCES \
     --p-perc-identity 0.97 \
+    --p-threads $NCORES \
     --output-dir $OUTPUT_DIR/cluster-output
 
 qiime vsearch uchime-denovo \
@@ -65,8 +66,8 @@ qiime vsearch uchime-denovo \
 
 qiime feature-table filter-features-conditionally \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table.qza \
-    --p-abundance 0.01 \
-    --p-prevalence 0.01 \
+    --p-abundance 0.001 \
+    --p-prevalence 0.001 \
     --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza
 
 qiime feature-table filter-seqs \
