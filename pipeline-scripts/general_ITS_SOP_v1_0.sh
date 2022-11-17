@@ -46,7 +46,6 @@ qiime deblur denoise-other \
     --i-demultiplexed-seqs $OUTPUT_DIR/reads_trimmed_joined_filt.qza \
     --i-reference-seqs $REFERENCE_SEQUENCES \
     --p-trim-length 270 \
-    --p-sample-stats \
     --p-min-reads 1 \
     --p-jobs-to-start $NCORES \
     --output-dir $OUTPUT_DIR/deblur-output
