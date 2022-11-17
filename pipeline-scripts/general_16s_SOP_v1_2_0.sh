@@ -51,57 +51,56 @@ qiime deblur denoise-16S \
     --p-jobs-to-start $NCORES \
     --output-dir $OUTPUT_DIR/deblur-output
 
-qiime vsearch cluster-features-de-novo \
-    --i-sequences $OUTPUT_DIR/deblur-output/representative_sequences.qza \
+qiime vsearch cluster-features-open-reference \
+    --i-sequences 
     --i-table $OUTPUT_DIR/deblur-output/table.qza \
+    --i-reference-sequences $REFERENCE_SEQUENCES \
     --p-perc-identity 0.97 \
     --p-threads $NCORES \
-    --output-dir $OUTPUT_DIR/cluster-output \
-    --verbose
+    --output-dir $OUTPUT_DIR/cluster-output
 
 qiime vsearch uchime-denovo \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table.qza \
     --i-sequences $OUTPUT_DIR/cluster-output/clustered_sequences.qza \
     --output-dir $OUTPUT_DIR/chimera-filter-output
 
-qiime feature-table filter-features-conditionally \
+qiime feature-table filter-features \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table.qza \
-    --p-abundance 0.001 \
-    --p-prevalence 0.001 \
-    --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza
+    --m-metadata-file $OUTPUT_DIR/chimera-filter-output/nonchimeras.qza \
+    --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_nonchimeric.qza
+qiime feature-table filter-seqs \
+    --i-data $OUTPUT_DIR/cluster-output/clustered_sequences.qza \
+    --m-metadata-file $OUTPUT_DIR/chimera-filter-output/nonchimeras.qza \
+    --o-filtered-data $OUTPUT_DIR/cluster-output/clustered_sequences_nonchimeric.qza
 
-# qiime feature-table filter-seqs \
-#     --i-data $OUTPUT_DIR/chimera-filter-output/nonchimeras.qza \
+# qiime feature-classifier classify-sklearn \
+#     --i-reads $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza \
+#     --i-classifier $CLASSIFIER \
+#     --p-n-jobs $NCORES \
+#     --output-dir $OUTPUT_DIR/taxa
+
+# qiime taxa filter-table \
 #     --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
-#     --o-filtered-data $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza
+#     --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
+#     --p-include p__ \
+#     --p-exclude mitochondria,chloroplast \
+#     --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza
 
-qiime feature-classifier classify-sklearn \
-    --i-reads $OUTPUT_DIR/chimera-filter-output/nonchimeras.qza \
-    --i-classifier $CLASSIFIER \
-    --p-n-jobs $NCORES \
-    --output-dir $OUTPUT_DIR/taxa
+# qiime feature-table summarize \
+#     --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
+#     --o-visualization $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qzv
 
-qiime taxa filter-table \
-    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
-    --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
-    --p-exclude mitochondria,chloroplast \
-    --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza
+# qiime tools export \
+#     --input-path $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
+#     --output-path $OUTPUT_DIR/exported-feature-table
 
-qiime feature-table summarize \
-    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
-    --o-visualization $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qzv
+# qiime taxa barplot \
+#     --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
+#     --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
+#     --m-metadata-file $METADATA \
+#     --o-visualization $OUTPUT_DIR/taxa/taxa_barplot.qzv
 
-qiime tools export \
-    --input-path $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
-    --output-path $OUTPUT_DIR/exported-feature-table
-
-qiime taxa barplot \
-    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
-    --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
-    --m-metadata-file $METADATA \
-    --o-visualization $OUTPUT_DIR/taxa/taxa_barplot.qzv
-
-qiime phylogeny align-to-tree-mafft-fasttree \
-    --i-sequences $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza \
-    --p-n-threads $NCORES \
-    --output-dir $OUTPUT_DIR/tree
+# qiime phylogeny align-to-tree-mafft-fasttree \
+#     --i-sequences $OUTPUT_DIR/chimera-filter-output/nonchimeras_filtered.qza \
+#     --p-n-threads $NCORES \
+#     --output-dir $OUTPUT_DIR/tree
