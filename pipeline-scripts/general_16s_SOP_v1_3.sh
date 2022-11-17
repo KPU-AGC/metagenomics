@@ -1,5 +1,5 @@
 #!/bin/bash
-# general_16s_SOP_v1_1_0.sh (qiime2-2022.8)
+# general_16s_SOP_v1_3_0.sh (qiime2-2022.8)
 
 # Program performs a general qiime2 (qiime2-2022.8) pipeline and eventually produces a taxa bar plot
 # and rooted phylogenetic tree.
@@ -87,8 +87,8 @@ qiime taxa filter-table \
     --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_nonchimeric_decontam.qza
 
 qiime feature-table summarize \
-    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza \
-    --o-visualization $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qzv
+    --i-table $OUTPUT_DIR/cluster-output/clustered_table_nonchimeric_decontam.qza \
+    --o-visualization $OUTPUT_DIR/cluster-output/clustered_table_nonchimeric_decontam.qzv
 
 qiime taxa barplot \
     --i-table $OUTPUT_DIR/cluster-output/clustered_table_nonchimeric_decontam.qza \
