@@ -82,9 +82,8 @@ qiime feature-classifier classify-sklearn \
     --output-dir $OUTPUT_DIR/taxa
 
 qiime taxa filter-table \
-    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered_again.qza \
+    --i-table $OUTPUT_DIR/cluster-output/clustered_table_filtered.qza \
     --i-taxonomy $OUTPUT_DIR/taxa/classification.qza \
-    --p-include p__ \
     --p-exclude mitochondria,chloroplast \
     --o-filtered-table $OUTPUT_DIR/cluster-output/clustered_table_filt_decontam.qza
 
