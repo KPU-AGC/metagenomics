@@ -1,5 +1,5 @@
 #!/bin/bash
-# general_16S_SOP_v1_3.sh (qiime2-2022.8)
+# general_ITS_SOP_v1_0.sh (qiime2-2022.8)
 
 # Program performs a general qiime2 (qiime2-2022.8) pipeline and eventually produces a taxa bar plot
 # and rooted phylogenetic tree.
@@ -13,8 +13,8 @@ OUTPUT_DIR="output"
 #-------------- Variables -------------#
 METADATA="metadata.tab"
 NCORES=8
-REFERENCE_SEQUENCES="../resources/silva-138/silva-138-99-seqs.qza"
-CLASSIFIER="../resources/classifiers/silva-138-99-nb-classifier.qza"
+REFERENCE_SEQUENCES="../resources/unite-ver9/unite-ver9-seqs.qza"
+CLASSIFIER="../resources/classifiers/unite-ver9-99-classifier.qza"
 
 mkdir $OUTPUT_DIR
 
@@ -26,8 +26,8 @@ qiime tools import \
 
 qiime cutadapt trim-paired \
     --i-demultiplexed-sequences $OUTPUT_DIR/reads.qza \
-    --p-anywhere-f CCTACGGGNGGCWGCAG \
-    --p-anywhere-r GACTACHVGGGTATCTAATCC \
+    --p-anywhere-f CTTGGTCATTTAGAGGAAGTAA \
+    --p-anywhere-r GCTGCGTTCTTCATCGATGC \
     --p-discard-untrimmed \
     --p-no-indels \
     --p-cores $NCORES \
@@ -42,10 +42,10 @@ qiime quality-filter q-score \
     --o-filter-stats $OUTPUT_DIR/filt_stats.qza \
     --o-filtered-sequences $OUTPUT_DIR/reads_trimmed_joined_filt.qza
 
-qiime deblur denoise-16S \
+qiime deblur denoise-other \
     --i-demultiplexed-seqs $OUTPUT_DIR/reads_trimmed_joined_filt.qza \
+    --i-reference-seqs $REFERENCE_SEQUENCES \
     --p-trim-length 270 \
-    --p-sample-stats \
     --p-min-reads 1 \
     --p-jobs-to-start $NCORES \
     --output-dir $OUTPUT_DIR/deblur-output
