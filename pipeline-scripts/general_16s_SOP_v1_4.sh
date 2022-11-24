@@ -50,9 +50,14 @@ qiime deblur denoise-16S \
     --p-jobs-to-start $NCORES \
     --output-dir $OUTPUT_DIR/deblur-output
 
+qiime vsearch dereplicate-sequences \
+  --i-sequences $OUTPUT_DIR/deblur-output/representative_sequences.qza \
+  --o-dereplicated-table $OUTPUT_DIR/deblur-output/dereplicated_table.qza \
+  --o-dereplicated-sequences $OUTPUT_DIR/deblur-output/dereplicated_representative_sequences.qza
+
 qiime vsearch cluster-features-open-reference \
-    --i-sequences $OUTPUT_DIR/deblur-output/representative_sequences.qza \
-    --i-table $OUTPUT_DIR/deblur-output/table.qza \
+    --i-sequences $OUTPUT_DIR/deblur-output/dereplicated_representative_sequences.qza \
+    --i-table $OUTPUT_DIR/deblur-output/dereplicated_table.qza \
     --i-reference-sequences $REFERENCE_SEQUENCES \
     --p-perc-identity 0.97 \
     --p-threads $NCORES \
