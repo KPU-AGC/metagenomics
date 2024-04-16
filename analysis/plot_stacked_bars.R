@@ -175,7 +175,7 @@ ggplot.stacked_taxonomy <- function(input_df, x = "index", top_n = 10, pattern="
   input_df$taxonomy_str <- ifelse(input_df$taxonomy_str %in% top_species, as.character(input_df$taxonomy_str), 'Other')
   
   # Reordering species to make 'Other' the last factor level
-  input_df$taxonomy_str <- factor(input_df$taxonomy_str, levels = c(setdiff(unique(input_df$taxonomy_str), 'Other'), 'Other'))
+  input_df$taxonomy_str <- factor(input_df$taxonomy_str, levels = rev(c(setdiff(top_species, 'Other'), 'Other')))
   
   # Defining color palette
   palette_colors <- c("grey80", brewer.pal(7, "Dark2"))
@@ -184,28 +184,23 @@ ggplot.stacked_taxonomy <- function(input_df, x = "index", top_n = 10, pattern="
     palette_colors <- c(palette_colors, brewer.pal(extra_colors_needed, "Set3"))
   }
   
-
-  #aes_string(fill = "taxonomy_str", y = "counts", x = x, order = "-as.numeric(taxonomy_str)")
   # ggplot elements
   output_plot <- ggplot(input_df, aes(fill = taxonomy_str, y = counts, x = !!sym(x), order = -as.numeric(taxonomy_str))) + 
     geom_bar(position = "fill", stat = "identity") +
     scale_fill_manual(values = palette_colors) +
-    guides(fill = guide_legend(reverse = FALSE)) + 
+    guides(fill = guide_legend(reverse = F)) + 
     scale_y_continuous(expand = c(0, 0), labels = scales::percent) +
     theme_light() +
     theme(
       panel.grid.major.x = element_blank(),
       panel.grid.minor.x = element_blank()
     ) +
-    labs(x = "Sample", y = "Relative abundance (%)", fill = paste0("Species (", expand_taxonomy(pattern), ")"))
+    labs(x = "Sample", y = "Relative abundance (%)", fill = paste0("Taxonomy (", expand_taxonomy(pattern), ")"))
 
   return(output_plot)
 }
 
 
-
-
-
 long_df <- read.abundance_table("//wsl.localhost/Ubuntu/home/erick/projects/one-offs/20240416_edna/level-7.csv")
-ggplot.stacked_taxonomy(long_df, top_n = 15, pattern = "g; s") #+
+ggplot.stacked_taxonomy(long_df, top_n = 10, pattern = "g; s") #+
   facet_wrap(~collection_date, scale="free_x")
