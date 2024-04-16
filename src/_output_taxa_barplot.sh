@@ -1,4 +1,4 @@
-#!/bin bash
+#!/bin/bash
 #
 # After importing data and checking the mean sample depth, filter out contaminants and
 # output a taxonomy barplot.
@@ -13,6 +13,10 @@ for ARGUMENT in "$@"; do
 done
 
 BLEEDTHROUGH_VALUE=$(echo "${SAMPLE_DEPTH} * 0.001" | bc | sed 's/\..*//')
+if [ -z "${BLEEDTHROUGH_VALUE}" ]; then
+  BLEEDTHROUGH_VALUE=0
+fi
+
 qiime feature-table filter-features \
   --i-table ${QIIME_OUT_DIR}/denoise_output/table.qza \
   --p-min-frequency $BLEEDTHROUGH_VALUE \
