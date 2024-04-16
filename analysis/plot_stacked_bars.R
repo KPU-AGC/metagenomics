@@ -1,5 +1,7 @@
 library(dplyr)
 library(tidyr)
+library(RColorBrewer)
+library(ggplot2)
 
 #' read.abundance_table
 #'
@@ -183,8 +185,9 @@ ggplot.stacked_taxonomy <- function(input_df, x = "index", top_n = 10, pattern="
   }
   
 
+  #aes_string(fill = "taxonomy_str", y = "counts", x = x, order = "-as.numeric(taxonomy_str)")
   # ggplot elements
-  output_plot <- ggplot(input_df, aes_string(fill = "taxonomy_str", y = "counts", x = x, order = "-as.numeric(taxonomy_str)")) + 
+  output_plot <- ggplot(input_df, aes(fill = taxonomy_str, y = counts, x = !!sym(x), order = -as.numeric(taxonomy_str))) + 
     geom_bar(position = "fill", stat = "identity") +
     scale_fill_manual(values = palette_colors) +
     guides(fill = guide_legend(reverse = FALSE)) + 
@@ -203,6 +206,6 @@ ggplot.stacked_taxonomy <- function(input_df, x = "index", top_n = 10, pattern="
 
 
 
-long_df <- read.abundance_table("C:/Users/erick/Downloads/level-7.csv")
-ggplot.stacked_taxonomy(long_df, x = "site", top_n = 15, pattern = "d; p") +
+long_df <- read.abundance_table("//wsl.localhost/Ubuntu/home/erick/projects/one-offs/20240416_edna/level-7.csv")
+ggplot.stacked_taxonomy(long_df, top_n = 15, pattern = "g; s") #+
   facet_wrap(~collection_date, scale="free_x")
