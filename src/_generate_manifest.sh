@@ -1,4 +1,4 @@
-#!/bin bash
+#!/bin/bash
 #
 # Generate a manifest file that QIIME2 can read for each of the fastq in a given directory.
 

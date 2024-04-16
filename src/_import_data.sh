@@ -1,4 +1,4 @@
-#!/bin bash
+#!/bin/bash
 #
 # Perform a series of standardized QIIME2 commands for importing data.
 
