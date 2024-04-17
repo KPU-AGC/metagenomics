@@ -43,9 +43,9 @@ do_deblur () {
     --output-dir ${QIIME_OUT_DIR}/denoise_output
 }
 
-if [ "$TOOL" = "DADA2" ]; then
+if [ "${DENOISE}" = "DADA2" ]; then
     do_dada2
-elif [ "$TOOL" = "DEBLUR" ]; then
+elif [ "${DENOISE}" = "DEBLUR" ]; then
     do_deblur
 else
     echo "Invalid tool specified. Please specify DADA2 or DEBLUR."

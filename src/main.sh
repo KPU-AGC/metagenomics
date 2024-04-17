@@ -12,7 +12,7 @@ QIIME_DATA="/home/erick/data/qiime"
   FASTQ_DIR=${FASTQ_DIR} \
   QIIME_OUT_DIR=${QIIME_OUT_DIR} \
   QIIME_DATA=${QIIME_DATA} \
-  TOOL="DADA2"
+  DENOISE="DADA2"
 
 read -p "Mean sample depth: " BLEEDTHROUGH_VALUE
 ./src/_output_taxa_barplot.sh \
