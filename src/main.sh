@@ -8,7 +8,7 @@ QIIME_DATA="/home/erick/data/qiime"
 
 ./src/_generate_manifest.sh ${FASTQ_DIR}
 
-./src/_import_data-deblur.sh \
+./src/_import_data.sh \
   FASTQ_DIR=${FASTQ_DIR} \
   QIIME_OUT_DIR=${QIIME_OUT_DIR} \
   QIIME_DATA=${QIIME_DATA} \
