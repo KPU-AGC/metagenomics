@@ -200,6 +200,23 @@ ggplot.stacked_taxonomy <- function(input_df, x = "index", top_n = 10, pattern="
   return(output_plot)
 }
 
+#' filter.taxonomy
+#'
+#' A function that is intended to mimic dplyr's function for filtering, but this
+#' is based on the parsed_taxonomy that should be in the parsed_dataframe.
+#'  
+#' @param .data An input dataframe, should be the input from the other function 
+#' (read.abundance_table).
+#' @param taxon A string containing the taxonomic level in qiime format.
+#' @param taxon_str A string to check against the specific taxonomic level.
+#'
+#' @return Returns a dataframe with the applied filters.
+#'
+#' @examples
+#' long_df %>% filter.taxonomy("d", "Archaea")
+filter.taxonomy <- function(.data, taxon, taxon_str) {
+  return(filter(.data, sapply(.data$parsed_taxonomy, function(x) taxon_str %in% x[taxon])))
+}
 
 long_df <- read.abundance_table("//wsl.localhost/Ubuntu/home/erick/projects/one-offs/20240416_edna/level-7.csv")
 ggplot.stacked_taxonomy(long_df, top_n = 10, pattern = "g; s") #+
