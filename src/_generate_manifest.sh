@@ -21,6 +21,7 @@ OUTPUT_FILE=${FASTQ_DIRECTORY}/"fastq.manifest"
 
 echo -e "sample-id\tforward-absolute-filepath\treverse-absolute-filepath" > "${OUTPUT_FILE}"
 
+SAMPLE_NUM=$(ls -1 ${FASTQ_DIRECTORY}/*.R1.fastq.gz | wc -l)
 find "${FASTQ_DIRECTORY}" -name "*.R1.fastq.gz" | sort | while read R1_PATH; do
     BASE_NAME=$(basename "${R1_PATH}" .R1.fastq.gz)
     R2_PATH="${R1_PATH/R1.fastq.gz/R2.fastq.gz}"
@@ -33,4 +34,4 @@ find "${FASTQ_DIRECTORY}" -name "*.R1.fastq.gz" | sort | while read R1_PATH; do
         err "Matching R2 file not found for ${R1_PATH}"
     fi
 done
-err "Process completed."
+err "Found ${SAMPLE_NUM} sample(s) and generated manifest file: ${OUTPUT_FILE}"
